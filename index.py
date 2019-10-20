@@ -21,13 +21,13 @@ logger.setLevel(logging.DEBUG)
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_request_type('LaunchRequest')(handler_input)
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('launch request handler')
 
-        text = 'What would you like to do?'
+        text = "What's up?"
 
         handler_input.response_builder.speak(text).ask(text)
 
@@ -35,10 +35,10 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
 
 class BanTeamspeakIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_intent_name('BanTeamspeakIntent')(handler_input)
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('ban teamspeak intent handler')
 
         slots = handler_input.request_envelope.request.intent.slots
@@ -55,9 +55,13 @@ class BanTeamspeakIntentHandler(AbstractRequestHandler):
         if r.status_code >= 200 and r.status_code <= 299:
             text = f'Successfully banned {name} from TeamSpeak.'
         else:
+            logger.error(f'http status: {r.status_code}')
+            logger.error(f'response: {r.text}')
+
             text = 'There was an error with the server.'
 
-            logger.error(f'response: {r.text}')
+            if r.status_code == 501:
+                text = f'{name} is not in the server.'
 
         handler_input.response_builder.speak(text)
         handler_input.response_builder.set_should_end_session(True)
@@ -66,10 +70,10 @@ class BanTeamspeakIntentHandler(AbstractRequestHandler):
 
 
 class UpdateWeightIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_intent_name('UpdateWeightIntent')(handler_input)
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('update weight intent handler')
 
         slots = handler_input.request_envelope.request.intent.slots
@@ -77,17 +81,18 @@ class UpdateWeightIntentHandler(AbstractRequestHandler):
         logger.debug(f'slots: {slots}')
 
         if not slots['weight']:
-            handler_input.response_builder.speak('What is your weight?')
+            text = 'What is your weight?'
+
+            handler_input.response_builder.speak(text).ask(text)
 
             return handler_input.response_builder.response
 
+        # have to do this because alexa doesn't allow float values, just integers
         full = int(slots['weight'].value)
 
         fraction = slots['fraction'].value
 
         if fraction:
-            fraction = int(fraction)
-
             full = float(f'{full}.{fraction}')
         else:
             full = float(full)
@@ -100,7 +105,7 @@ class UpdateWeightIntentHandler(AbstractRequestHandler):
         if r.status_code >= 200 and r.status_code <= 299:
             text = f'Successfully updated weight to {full} pounds.'
         else:
-            text = 'There was an error with the server updating your weight.'
+            text = 'There was an error with the server.'
 
             logger.error(f'response: {r.text}')
 
@@ -111,13 +116,13 @@ class UpdateWeightIntentHandler(AbstractRequestHandler):
 
 
 class FallbackIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_intent_name('AMAZON.FallbackIntent')(handler_input)
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('fallback intent handler')
 
-        text = 'What was that?'
+        text = 'What?'
 
         handler_input.response_builder.speak(text).ask(text)
 
@@ -125,24 +130,23 @@ class FallbackIntentHandler(AbstractRequestHandler):
 
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return (is_intent_name('AMAZON.CancelIntent')(handler_input) or
                 is_intent_name('AMAZON.StopIntent')(handler_input))
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('cancel or stop intent handler')
 
-        handler_input.response_builder.speak('Bye!')
         handler_input.response_builder.set_should_end_session(True)
 
         return handler_input.response_builder.response
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input : HandlerInput) -> bool:
+    def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_request_type('SessionEndedRequest')(handler_input)
 
-    def handle(self, handler_input : HandlerInput) -> Response:
+    def handle(self, handler_input: HandlerInput) -> Response:
         logger.debug('session ended request handler')
 
         logger.info(f'session ended: {handler_input.request_envelope.request.reason}')
@@ -151,15 +155,15 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
 
 
 class ExceptionHandler(AbstractExceptionHandler):
-    def can_handle(self, handler_input : HandlerInput, exception : Exception) -> bool:
+    def can_handle(self, handler_input: HandlerInput, exception: Exception) -> bool:
         return True
 
-    def handle(self, handler_input : HandlerInput, exception : Exception) -> Response:
+    def handle(self, handler_input: HandlerInput, exception: Exception) -> Response:
         logger.debug('exception handler')
 
         logger.error(f'exception: {exception}', exc_info=True)
 
-        handler_input.response_builder.speak('There was an error, sorry.')
+        handler_input.response_builder.speak('There was an error.')
 
         return handler_input.response_builder.response
 
