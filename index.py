@@ -43,6 +43,8 @@ class BanTeamspeakIntentHandler(AbstractRequestHandler):
 
         slots = handler_input.request_envelope.request.intent.slots
 
+        logger.debug(f'slots: {slots}')
+
         name = str(slots['name'].value)
 
         headers = {'content-type': 'application/json', 'api-key': API_KEY}
@@ -54,6 +56,8 @@ class BanTeamspeakIntentHandler(AbstractRequestHandler):
             text = f'Successfully banned {name} from TeamSpeak.'
         else:
             text = 'There was an error with the server.'
+
+            logger.error(f'response: {r.text}')
 
         handler_input.response_builder.speak(text)
         handler_input.response_builder.set_should_end_session(True)
@@ -98,7 +102,7 @@ class UpdateWeightIntentHandler(AbstractRequestHandler):
         else:
             text = 'There was an error with the server updating your weight.'
 
-            logger.debug(f'response: {r.text}')
+            logger.error(f'response: {r.text}')
 
         handler_input.response_builder.speak(text)
         handler_input.response_builder.set_should_end_session(True)
