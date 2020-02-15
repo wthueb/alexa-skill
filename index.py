@@ -13,7 +13,7 @@ from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model.ui import SimpleCard
 from ask_sdk_model import Response
 
-from secrets import *
+import config
 
 
 logger = logging.getLogger(__name__)
@@ -47,10 +47,10 @@ class BanTeamspeakIntentHandler(AbstractRequestHandler):
 
         name = str(slots['name'].value)
 
-        headers = {'content-type': 'application/json', 'api-key': API_KEY}
+        headers = {'content-type': 'application/json', 'api-key': config.API_KEY}
         data = {'name': name}
 
-        r = requests.post(BAN_TEAMSPEAK_URL, headers=headers, data=json.dumps(data))
+        r = requests.post(config.BAN_TEAMSPEAK_URL, headers=headers, data=json.dumps(data))
 
         if r.status_code >= 200 and r.status_code <= 299:
             text = f'Successfully banned {name} from TeamSpeak.'
@@ -97,10 +97,10 @@ class UpdateWeightIntentHandler(AbstractRequestHandler):
         else:
             full = float(full)
 
-        headers = {'content-type': 'application/json', 'api-key': API_KEY}
+        headers = {'content-type': 'application/json', 'api-key': config.API_KEY}
         data = {'weight': full}
 
-        r = requests.post(UPDATE_WEIGHT_URL, headers=headers, data=json.dumps(data))
+        r = requests.post(config.UPDATE_WEIGHT_URL, headers=headers, data=json.dumps(data))
 
         if r.status_code >= 200 and r.status_code <= 299:
             text = f'Successfully updated weight to {full} pounds.'
