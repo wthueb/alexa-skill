@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 rm function.zip
-cd env/lib/python3.7/site-packages/
+cd env/lib/python3.8/site-packages/
 zip -r ../../../../function.zip .
 cd ../../../../
 zip -g function.zip index.py
